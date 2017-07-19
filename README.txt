@@ -1,7 +1,17 @@
+Installing and running the weather chatbot.
+
+7/19/17
+Joel Bremson
+
 To install:
 
 pip install flask
 pip install -U flask-cors
+
+To configure:
+
+Copy ./src/secrets.tmpl to ./src/secrets.py.
+Edit ./src/secrets.py with the various key values.
 
 To start webserver:
 
