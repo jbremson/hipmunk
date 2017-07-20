@@ -30,13 +30,13 @@ class ChatbotTestCase(unittest.TestCase):
 
     def test_invalid_response(self):
         retval = json.loads(invalid_response("test invalid_response"))
-        self.assertEqual(retval['messages'][0]['text'], "ERROR: test invalid_response")
+        self.assertEqual(retval['messages'][0]['text'], "test invalid_response")
 
     def test_get_url(self):
         retval = str(get_url("http://www.google.com"))
         self.assertTrue('Search' in retval)
         retval = json.loads((get_url("http://www.ljslfkjsd flksdjf lksdjfsd.com", debug=True)))
-        self.assertTrue('ERROR' in retval['messages'][0]['text'])
+        self.assertTrue('text' in retval['messages'][0].keys())
 
     def test_geolocate(self):
         loc = geolocate("Los Angeles,   CA")

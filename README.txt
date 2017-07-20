@@ -13,6 +13,10 @@ To configure:
 Copy ./src/secrets.tmpl to ./src/secrets.py.
 Edit ./src/secrets.py with the various key values.
 
+To test:
+
+python test_chatbot.py
+
 To start webserver:
 
 In src/:
