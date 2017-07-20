@@ -1,14 +1,15 @@
 import unittest
-from src.chatbot import app, ResponseManager, invalid_response, geolocate, get_url, parse_location, weather
+from src.chatbot import app, ResponseManager, invalid_response, geolocate, get_url, parse_location, get_weather
 import json
 
+#TODO - remove prints. Add good integration test.
 class ChatbotTestCase(unittest.TestCase):
 
     def setUp(self):
         app.testing = True
         self.app = app.test_client()
 
-    def test_basic(self):
+    def test_join(self):
         retval = self.app.post("/chat/messages", data=dict(action='join', user_id=1234, name='joel'),
                                                             content_type='multipart/form-data')
         self.assertEqual(retval.status_code, 200)
@@ -19,7 +20,14 @@ class ChatbotTestCase(unittest.TestCase):
         retval = self.app.post("/chat/messages", data=dict(action='message', user_id=1234,
                                                            text='kjsdf kljsd f kjdsfsdfdd k'))
         retval = json.loads(retval.data)
-        print(retval)
+        self.assertTrue('understand' in retval['messages'][0]['text'])
+
+
+    def test_good_message(self):
+        retval = self.app.post("/chat/messages", data=dict(action='message', user_id=1234,
+                                                           text='what is the weather in Los Angeles'))
+        retval = json.loads(retval.data)
+        self.assertTrue("Currently it's" in retval['messages'][0]['text'])
 
     def test_ResponseManager(self):
         response_manager = ResponseManager()
@@ -35,6 +43,7 @@ class ChatbotTestCase(unittest.TestCase):
     def test_get_url(self):
         retval = str(get_url("http://www.google.com"))
         self.assertTrue('Search' in retval)
+        print("\n\nError messages should be printed here.")
         retval = json.loads((get_url("http://www.ljslfkjsd flksdjf lksdjfsd.com", debug=True)))
         self.assertTrue('text' in retval['messages'][0].keys())
 
@@ -44,7 +53,7 @@ class ChatbotTestCase(unittest.TestCase):
 
     def test_weather(self):
         loc = geolocate("Davis, CA")
-        out = weather(loc)
+        out = get_weather(loc)
         self.assertTrue('summary' in out.keys())
 
     def test_parse_location(self):
@@ -55,6 +64,7 @@ class ChatbotTestCase(unittest.TestCase):
         loc = parse_location(txt)
         self.assertEqual("los angeles, ca",loc)
         txt = "lkjsdlfkj  lkjsdfk sfjkds"
+        # Convert this to exception catching test.
         caught = False
         try:
             loc = json.loads(parse_location(txt))

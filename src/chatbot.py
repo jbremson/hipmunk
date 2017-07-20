@@ -58,7 +58,7 @@ def geolocate(address):
     return json.loads(get_url(url))['results'][0]['geometry']['location']
 
 
-def weather(loc):
+def get_weather(loc):
     """Gets the weather given dict {'lat':..., 'lng':...}. """
     url = "https://api.darksky.net/forecast/{}/{},{}?" \
           "exclude=minutely,hourly,daily,alerts,flags".format(DARK_SKY_KEY,
@@ -113,7 +113,7 @@ def message():
                 location = parse_location(vals['text'])
             except ValueError:
                 return invalid_response("I do not understand '{}'".format(vals['text']))
-            weather_data = weather(geolocate(location))
+            weather_data = get_weather(geolocate(location))
             response_manager.add_response('text', "Currently it's {}F. {}.".
                                           format(weather_data['temperature'],
                                                  weather_data['summary']))
