@@ -29,7 +29,6 @@ class ResponseManager():
 def invalid_response(message):
     """Return an invalid response message as json."""
     response_manager = ResponseManager()
-    message = "ERROR: " + message
     response_manager.add_response(type='text', text=message)
     return response_manager.return_response_json()
 
@@ -60,14 +59,20 @@ def weather(loc):
     weather_info = json.loads(get_url(url))['currently']
     return dict(summary=weather_info['summary'], temperature=weather_info['temperature'])
 
-def get_weather(text):
-    """Returns weather info. Input <text> is input string like 'Get weather in San Francisco'."""
+
+def parse_location(text):
+    """Parse location from text input. Text will be one of these:
+        1. ^.* weather in <location>$
+        2. <location> weather$
+
+        Return location name as string.
+        """
     # Remove extra white space and upper case from text
     text = re.sub("[ ]+", " ", text.strip().lower())
     location = None
-    # Simple algorithm here. Split the text on 'weather in'. If we find it take the right side.
+    # Simple algorithm here. Split the text on 'weather in'. If we find it, take the right side.
     # If we don't find it split on 'weather' and take the left side for location.
-    # If we don't find a location throw an invalid response screen.
+    # If we don't find a location,  throw an invalid response screen.
     tokens = text.split("weather in")
     if len(tokens)==2:
         location = tokens[1]
@@ -76,13 +81,9 @@ def get_weather(text):
         if len(tokens) == 2:
             location = tokens[0]
     if not location:
-        return invalid_response("I do not understand '{}'".format(text))
-    return weather(geolocate(location))
-
-
-
-
-
+        raise ValueError("Text does not parse.")
+    else:
+        return location.strip()
 
 
 @app.route('/chat/messages', methods=['POST'])
@@ -95,7 +96,11 @@ def message():
                 return invalid_response("'user_id' and/or 'name key is missing.")
             response_manager.add_response('text', "Hello {}!". format(vals['name'].capitalize()))
         elif vals['action'] == 'message':
-            weather_data = get_weather(vals['text'])
+            try:
+                location = parse_location(vals['text'])
+            except ValueError:
+                return invalid_response("I do not understand '{}'".format(vals['text']))
+            weather_data = weather(geolocate(location))
             response_manager.add_response('text', "Currently it's {}F. {}.".format(weather_data['temperature'],
                                                                                    weather_data['summary']))
         else:

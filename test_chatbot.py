@@ -1,5 +1,5 @@
 import unittest
-from src.chatbot import app, ResponseManager, invalid_response, geolocate, get_url, weather
+from src.chatbot import app, ResponseManager, invalid_response, geolocate, get_url, parse_location, weather
 import json
 
 class ChatbotTestCase(unittest.TestCase):
@@ -14,6 +14,12 @@ class ChatbotTestCase(unittest.TestCase):
         self.assertEqual(retval.status_code, 200)
         retval = json.loads(retval.data)
         self.assertTrue(len(retval['messages']) == 1)
+
+    def test_bad_message(self):
+        retval = self.app.post("/chat/messages", data=dict(action='message', user_id=1234,
+                                                           text='kjsdf kljsd f kjdsfsdfdd k'))
+        retval = json.loads(retval.data)
+        print(retval)
 
     def test_ResponseManager(self):
         response_manager = ResponseManager()
@@ -39,8 +45,22 @@ class ChatbotTestCase(unittest.TestCase):
     def test_weather(self):
         loc = geolocate("Davis, CA")
         out = weather(loc)
-        print(out)
+        self.assertTrue('summary' in out.keys())
 
+    def test_parse_location(self):
+        txt = "weather in Paris FRance"
+        loc = parse_location(txt)
+        self.assertEqual('paris france', loc)
+        txt = "Los Angeles, CA weather"
+        loc = parse_location(txt)
+        self.assertEqual("los angeles, ca",loc)
+        txt = "lkjsdlfkj  lkjsdfk sfjkds"
+        caught = False
+        try:
+            loc = json.loads(parse_location(txt))
+        except ValueError:
+            caught = True
+        self.assertTrue(caught)
 
 
 if __name__ == '__main__':
